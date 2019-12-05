@@ -40,6 +40,18 @@ export class Todo extends Domain {
 }
 
 @domain()
+export class Song extends Domain {
+    constructor(
+				public title:string,
+				public artist:string,
+        @val.optional()
+				public link:string,
+        @val.optional()
+				public completed: boolean = false,
+    ) { super() }
+}
+
+@domain()
 export class LoginUser {
     constructor(
         public userId:number,

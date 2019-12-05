@@ -3,14 +3,14 @@ import { User } from "../../src/model/domain";
 import bcrypt from "bcrypt"
 
 async function addDefaultAdmin(knex:Knex){
-    const defaultUserEmail = "admin@todo.app"
-    const defaultUserPassword = await bcrypt.hash("123456", 10)
+    const defaultUserEmail = "admin@wp.app"
+    const defaultUserPassword = await bcrypt.hash("wp123456", 10)
     const exists = await knex.table("User").where({email: defaultUserEmail}).first()
     if(!exists){
         await knex.table("User").insert(<User>{
             email: defaultUserEmail,
             password: defaultUserPassword,
-            name: "Todo Admin",
+            name: "Super Admin",
             role: "Admin"
         })
     }
