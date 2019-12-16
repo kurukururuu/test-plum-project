@@ -22,7 +22,8 @@ export class SongsController {
     }
 
 		// GET /api/v1/songs?offset=<number>&limit=<number>
-		@authorize.role("Admin")
+		@authorize.public()
+		// @authorize.role("Admin")
     @route.get("")
     list(@val.optional() offset: number=0, @val.optional() limit: number=50) {
         return db("Song").where({deleted: 0})
@@ -31,7 +32,8 @@ export class SongsController {
     }
 
 		// GET /api/v1/songs/:id
-		@authorize.role("Admin")
+		@authorize.public()
+		// @authorize.role("Admin")
     @route.get(":id")
     get(id: number) {
         return db("Song").where({ id }).first()
