@@ -52,6 +52,18 @@ export class Song extends Domain {
 }
 
 @domain()
+export class Menu extends Domain {
+    constructor(
+				public name:string,
+				public price:string,
+				public stock:number,
+				public item_code:string,
+        @val.optional()
+				public completed: boolean = false,
+    ) { super() }
+}
+
+@domain()
 export class LoginUser {
     constructor(
         public userId:number,
