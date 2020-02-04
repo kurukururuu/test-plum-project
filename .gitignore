@@ -7,8 +7,4 @@ build
 !jest.config.js
 !jest.config.debug.js
 .DS_Store
-<<<<<<< HEAD
-dev.sqlite3.db
-=======
-dev.sqlite3.db
->>>>>>> cd3b94cd1dda05450262b219090298dff0d2e5a5
+packages/server/dev.sqlite3.db
