@@ -1,5 +1,6 @@
 import { domain, val, authorize } from "plumier";
 import { uniqueEmail } from "../validator/unique-email-validator";
+import { uniqueItemCode } from "../validator/unique-item-code-validator";
 
 export type UserRole = "User" | "Admin"
 
@@ -57,6 +58,7 @@ export class Menu extends Domain {
 				public name:string,
 				public price:string,
 				public stock:number,
+				@uniqueItemCode()
 				public item_code:string,
         @val.optional()
 				public completed: boolean = false,
