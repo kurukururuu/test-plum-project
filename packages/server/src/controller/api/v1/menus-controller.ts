@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt"
-import { route, val, authorize } from "plumier"
+import { HttpStatusError, route, val, authorize } from "plumier"
 
 import { db } from "../../../model/db"
 import { Menu } from "../../../model/domain"
@@ -52,5 +52,21 @@ export class MenusController {
     @route.delete(":id")
     delete(id: number) {
         return db("Menu").update({ deleted: 1 }).where({ id })
-    }
+		}
+		
+		// POST /api/v1/menus/:id/buy
+		@authorize.public()
+		// @ownerOrAdmin()
+		@route.post(":code/buy")
+		async buy(code: string, quantity: number) {
+				const currentItem = await db("Menu").where({ item_code:code }).first()
+				if (currentItem) {
+					if (currentItem.stock > quantity) {
+						await db("Menu").where({item_code: code}).first().update({stock:currentItem.stock-quantity})
+						return db("Menu").where({item_code: code}).first()
+					} else {
+						throw new HttpStatusError(400, "stock is not enough")
+					}
+				} else throw new HttpStatusError(400, "item not found")
+		}
 }
