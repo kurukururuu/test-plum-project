@@ -69,4 +69,61 @@ export class MenusController {
 					}
 				} else throw new HttpStatusError(400, "item not found")
 		}
+
+		// POST /api/v1/menus/buy
+		@authorize.public()
+		// @ownerOrAdmin()
+		@route.post("buy")
+		async buyMany(list: [{item_code: null, quantity: number}]) {
+			const result = await asyncForEach(list, async (element: {item_code: null, quantity: number}, index: number) => {
+			// const result = list.forEach(async element => {
+				// console.log(element)
+				const item = {
+					item_code: element.item_code,
+					status: {}
+				}
+				
+				const currentItem = await db("Menu").where({ item_code:element.item_code }).first()
+
+				if (currentItem) {
+					let updatedItem = {}
+
+					if (currentItem.stock > element.quantity) {
+						await db("Menu").where({item_code: currentItem.item_code}).first().update({stock:currentItem.stock - element.quantity})
+						updatedItem = await db("Menu").where({item_code: currentItem.item_code}).first()
+						item.status = {
+							message: 'Success',
+							data: updatedItem
+						}
+					} else {
+						item.status = {
+							message: 'stock is not enough',
+							data: currentItem
+						}
+						// throw new HttpStatusError(400, "stock is not enough")
+					}
+				} else {
+					item.status = {
+						message: 'item not found',
+						data: {}
+					}
+				}
+
+				return item
+			})
+
+			// console.log('res', result)
+			return result
+		}
+}
+
+async function asyncForEach(array: [{item_code: null, quantity: number}], callback: Function) {
+	let arr = new Array
+	for (let index = 0; index < array.length; index++) {
+		const result = await callback(array[index], index, array);
+		arr.push(result)
+		// console.log('asdasd', result)
+	}
+	return arr
+	// console.log('asdf', arr)
 }
