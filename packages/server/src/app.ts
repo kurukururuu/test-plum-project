@@ -5,6 +5,7 @@ import { join } from "path";
 import { JwtAuthFacility } from "@plumier/jwt"
 import dotenv from "dotenv"
 import { execute } from "graphql";
+import { MultiPartFacility } from "@plumier/multipart"
 
 dotenv.config()
 
@@ -27,8 +28,9 @@ export function createApp(config?:Partial<Configuration>): Promise<Koa> {
 	return new Plumier()
 		.set(config || {})
 		.use(new MyGlobalErrorHandlerMiddleware())
+		.set(new MultiPartFacility({ uploadPath: join(__dirname, "./upload") }))
 		.set(new WebApiFacility())
 		.set(new JwtAuthFacility({ secret: process.env.JWT_SECRET }))
-		.set(new ServeStaticFacility({ root: join(__dirname, "../../ui/dist") }))
+		.set(new ServeStaticFacility({ root: join(__dirname, "./upload") }))
 		.initialize()
 }

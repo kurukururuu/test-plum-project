@@ -6,10 +6,10 @@ import { bind } from "plumier"
 import { LoginUser } from "../../../model/domain"
 
 function ownerOrAdmin() {
-	return authorize.custom(async ({role, parameters, user}) => {
-		const todo: Todo = await db("Todo").where({ id: parameters[0] }).first()
-		return role.some(x => x === "Admin") || todo && todo.userId === user.userId
-}, "Admin|Owner")
+	return authorize.custom(async ({role, ctx, user}) => {
+			const todo: Todo = await db("Todo").where({ id: ctx.parameters[0] }).first()
+			return role.some(x => x === "Admin") || todo && todo.userId === user.userId
+	}, "Admin|Owner")
 }
 
 export class TodosController {
@@ -22,7 +22,7 @@ export class TodosController {
 
     // GET /api/v1/todos?offset=<number>&limit=<number>
     @route.get("")
-    list(@val.optional() offset: number=0, @val.optional() limit: number=25) {
+    list(offset: number=0, limit: number=25) {
         return db("Todo").where({deleted: 0})
             .offset(offset).limit(limit)
             .orderBy("createdAt", "desc")

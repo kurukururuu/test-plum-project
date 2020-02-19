@@ -1,16 +1,18 @@
-import bcrypt from "bcrypt"
 import { HttpStatusError, route, val, authorize } from "plumier"
 
 import { db } from "../../../model/db"
-import { Menu } from "../../../model/domain"
 import { bind } from "plumier"
-import { LoginUser } from "../../../model/domain"
-
+import { LoginUser, Menu } from "../../../model/domain"
 function ownerOrAdmin() {
-	return authorize.custom(async ({ role, user, parameters }) => {
-			return role.some(x => x === "Admin") || parameters[0] === user.userId
+	return authorize.custom(async ({role, ctx, user}) => {
+			return role.some(x => x === "Admin") || user && user.userId === user.userId
 	}, "Admin|Owner")
 }
+// function ownerOrAdmin() {
+// 	return authorize.custom(async ({ role, user, parameters }) => {
+// 			return role.some(x => x === "Admin") || parameters[0] === user.userId
+// 	}, "Admin|Owner")
+// }
 
 export class MenusController {
     
@@ -19,14 +21,14 @@ export class MenusController {
 		@authorize.role("Admin")
     @route.post("")
 		save(data: Menu, @bind.user() user: LoginUser) {
-			return db("Menu").insert(<Menu>{ ...data })
+			return db("Menu").insert(<Menu>{ ...data, userId: user.userId })
     }
 
 		// GET /api/v1/menus?offset=<number>&limit=<number>
-		@authorize.public()
-		// @authorize.role("Admin")
+		// @authorize.public()
+		@authorize.role("Admin")
     @route.get("")
-    list(@val.optional() offset: number=0, @val.optional() limit: number=50) {
+    list(offset: number=0, limit: number=50) {
         return db("Menu").where({deleted: 0})
         .offset(offset).limit(limit)
         .orderBy("createdAt", "desc")
@@ -55,8 +57,8 @@ export class MenusController {
 		}
 		
 		// POST /api/v1/menus/:id/buy
-		@authorize.public()
-		// @ownerOrAdmin()
+		// @authorize.public()
+		@ownerOrAdmin()
 		@route.post(":code/buy")
 		async buy(code: string, quantity: number) {
 				const currentItem = await db("Menu").where({ item_code:code }).first()
@@ -76,8 +78,6 @@ export class MenusController {
 		@route.post("buy")
 		async buyMany(list: [{item_code: null, quantity: number}]) {
 			const result = await asyncForEach(list, async (element: {item_code: null, quantity: number}, index: number) => {
-			// const result = list.forEach(async element => {
-				// console.log(element)
 				const item = {
 					item_code: element.item_code,
 					status: {}
@@ -100,7 +100,6 @@ export class MenusController {
 							message: 'stock is not enough',
 							data: currentItem
 						}
-						// throw new HttpStatusError(400, "stock is not enough")
 					}
 				} else {
 					item.status = {
@@ -112,7 +111,6 @@ export class MenusController {
 				return item
 			})
 
-			// console.log('res', result)
 			return result
 		}
 }
@@ -122,8 +120,6 @@ async function asyncForEach(array: [{item_code: null, quantity: number}], callba
 	for (let index = 0; index < array.length; index++) {
 		const result = await callback(array[index], index, array);
 		arr.push(result)
-		// console.log('asdasd', result)
 	}
 	return arr
-	// console.log('asdf', arr)
 }
