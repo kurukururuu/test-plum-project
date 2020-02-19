@@ -7,8 +7,8 @@ import { bind } from "plumier"
 import { LoginUser } from "../../../model/domain"
 
 function ownerOrAdmin() {
-	return authorize.custom(async ({ role, user, parameters }) => {
-			return role.some(x => x === "Admin") || parameters[0] === user.userId
+	return authorize.custom(async ({role, ctx, user}) => {
+			return role.some(x => x === "Admin") || user && user.userId === user.userId
 	}, "Admin|Owner")
 }
 
@@ -25,7 +25,7 @@ export class SongsController {
 		@authorize.public()
 		// @authorize.role("Admin")
     @route.get("")
-    list(@val.optional() offset: number=0, @val.optional() limit: number=50) {
+    list(offset: number=0, limit: number=50) {
         return db("Song").where({deleted: 0})
         .offset(offset).limit(limit)
         .orderBy("createdAt", "desc")
