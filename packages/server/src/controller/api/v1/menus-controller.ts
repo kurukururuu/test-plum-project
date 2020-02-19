@@ -18,8 +18,10 @@ export class MenusController {
 		@managerOrAdmin()
 		// @authorize.role("Admin")
     @route.post("")
-		save(data: Menu, @bind.user() user: LoginUser) {
-			return db("Menu").insert(<Menu>{ ...data, userId: user.userId })
+		async save(data: Menu, @bind.user() user: LoginUser) {
+			const id = await db("Menu").insert(<Menu>{ ...data, user_id: user.userId })
+			const menu = await db("Menu").where({ id }).first()
+			return menu
     }
 
 		// GET /api/v1/menus?offset=<number>&limit=<number>
@@ -27,9 +29,9 @@ export class MenusController {
 		// @authorize.role("Admin")
     @route.get("")
     list(offset: number=0, limit: number=50) {
-        return db("Menu").where({deleted: 0})
-        .offset(offset).limit(limit)
-        .orderBy("createdAt", "desc")
+			return db("Menu").where({deleted: 0})
+			.offset(offset).limit(limit)
+			.orderBy("createdAt", "desc")
     }
 
 		// GET /api/v1/menus/:id
@@ -37,21 +39,24 @@ export class MenusController {
 		// @authorize.role("Admin")
     @route.get(":id")
     get(id: number) {
-        return db("Menu").where({ id }).first()
+			return db("Menu").where({ id }).first()
     }
 
 		// PUT /api/v1/menus/:id
 		@managerOrAdmin()
     @route.put(":id")
-    modify(id: number, data: Menu) {
-        return db("Menu").update(data).where({ id })
+    async modify(id: number, data: Menu) {
+			await db("Menu").update(data).where({ id })
+			const menu = db("Menu").where({ id }).first()
+			return menu
 		}
 
 		// DELETE /api/v1/menus/:id
 		@managerOrAdmin()
     @route.delete(":id")
-    delete(id: number) {
-        return db("Menu").update({ deleted: 1 }).where({ id })
+    async delete(id: number) {
+			await db("Menu").update({ deleted: 1 }).where({ id })
+			return `success delete menu`
 		}
 		
 		// POST /api/v1/menus/:id/buy

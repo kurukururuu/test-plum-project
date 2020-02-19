@@ -16,7 +16,7 @@ import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
 
 export class FilesController {
     
-	// POST /api/v1/menus
+	// POST /api/v1/files
 	@authorize.public()
 	// @authorize.role("Admin")
 	// @managerOrAdmin()

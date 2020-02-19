@@ -66,6 +66,7 @@ export class Menu extends Domain {
 		public menu_picture: string,
 		public status:string = 'active',
 		public completed:boolean = false,
+		public user_id:number,
 	) { super() }
 }
 
