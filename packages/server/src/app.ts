@@ -33,7 +33,7 @@ export function createApp(config?:Partial<Configuration>): Promise<Koa> {
 		.set(new MultiPartFacility({ uploadPath: join(__dirname, "./upload") }))
 		.set(new WebApiFacility())
 		.set(new JwtAuthFacility({ secret: process.env.JWT_SECRET }))
-		.set(new ServeStaticFacility({ root: join(__dirname, "../../ui/dist") }))
+		.set(new ServeStaticFacility({ root: join(__dirname, "./upload") }))
 		.set(new MyFacility())
 		.initialize()
 }

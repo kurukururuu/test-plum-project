@@ -4,11 +4,13 @@ import { route, val, authorize } from "plumier"
 import { db } from "../../../model/db"
 import { User } from "../../../model/domain"
 
-function ownerOrAdmin() {
-	return authorize.custom(async ({ role, ctx, user }) => {
-			return role.some(x => x === "Admin") || user[0] === user.userId
-	}, "Admin|Owner")
-}
+import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
+
+// function ownerOrAdmin() {
+// 	return authorize.custom(async ({ role, ctx, user }) => {
+// 			return role.some(x => x === "Admin") || user[0] === user.userId
+// 	}, "Admin|Owner")
+// }
 
 function returnedUser(data: { password: null }) {
 	const obj = data
@@ -19,7 +21,8 @@ function returnedUser(data: { password: null }) {
 export class UsersController {
     
 		// POST /api/v1/users
-		@authorize.public()
+		// @authorize.public()
+		@managerOrAdmin()
     @route.post("")
     async save(data: User) {
 			const password = await bcrypt.hash(data.password, 10)
@@ -29,7 +32,8 @@ export class UsersController {
     }
 
 		// GET /api/v1/users?offset=<number>&limit=<number>
-		@authorize.role("Admin")
+		// @authorize.role("Admin")
+		@managerOrAdmin()
     @route.get("")
     async list(offset: number=0, limit: number=50) {
 			let users = await db("User").where({deleted: 0})
@@ -44,7 +48,8 @@ export class UsersController {
     }
 
 		// GET /api/v1/users/:id
-		@authorize.role("Admin")
+		// @authorize.role("Admin")
+		@managerOrAdmin()
     @route.get(":id")
     async get(id: number) {
 			const user = await db("User").where({ id }).first()
@@ -52,7 +57,7 @@ export class UsersController {
     }
 
 		// PUT /api/v1/users/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.put(":id")
     async modify(id: number, data: User) {
 			if (data.password) {
@@ -67,7 +72,7 @@ export class UsersController {
     }
 
 		// DELETE /api/v1/users/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.delete(":id")
     async delete(id: number) {
 			await db("User").update({ deleted: 1 }).where({ id })

@@ -3,30 +3,28 @@ import { HttpStatusError, route, val, authorize } from "plumier"
 import { db } from "../../../model/db"
 import { bind } from "plumier"
 import { LoginUser, Menu } from "../../../model/domain"
-function ownerOrAdmin() {
-	return authorize.custom(async ({role, ctx, user}) => {
-			return role.some(x => x === "Admin") || user && user.userId === user.userId
-	}, "Admin|Owner")
-}
+
+import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
+
 // function ownerOrAdmin() {
-// 	return authorize.custom(async ({ role, user, parameters }) => {
-// 			return role.some(x => x === "Admin") || parameters[0] === user.userId
+// 	return authorize.custom(async ({role, ctx, user}) => {
+// 		return role.some(x => x === "Admin") || user && user.userId === user.userId
 // 	}, "Admin|Owner")
 // }
 
 export class MenusController {
     
 		// POST /api/v1/menus
-		// @authorize.public()
-		@authorize.role("Admin")
+		@managerOrAdmin()
+		// @authorize.role("Admin")
     @route.post("")
 		save(data: Menu, @bind.user() user: LoginUser) {
 			return db("Menu").insert(<Menu>{ ...data, userId: user.userId })
     }
 
 		// GET /api/v1/menus?offset=<number>&limit=<number>
-		// @authorize.public()
-		@authorize.role("Admin")
+		@authorize.public()
+		// @authorize.role("Admin")
     @route.get("")
     list(offset: number=0, limit: number=50) {
         return db("Menu").where({deleted: 0})
@@ -35,30 +33,30 @@ export class MenusController {
     }
 
 		// GET /api/v1/menus/:id
-		// @authorize.public()
-		@authorize.role("Admin")
+		@authorize.public()
+		// @authorize.role("Admin")
     @route.get(":id")
     get(id: number) {
         return db("Menu").where({ id }).first()
     }
 
 		// PUT /api/v1/menus/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.put(":id")
     modify(id: number, data: Menu) {
         return db("Menu").update(data).where({ id })
 		}
 
 		// DELETE /api/v1/menus/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.delete(":id")
     delete(id: number) {
         return db("Menu").update({ deleted: 1 }).where({ id })
 		}
 		
 		// POST /api/v1/menus/:id/buy
-		// @authorize.public()
-		@ownerOrAdmin()
+		@authorize.public()
+		// @managerOrAdmin()
 		@route.post(":code/buy")
 		async buy(code: string, quantity: number) {
 				const currentItem = await db("Menu").where({ item_code:code }).first()
@@ -74,7 +72,7 @@ export class MenusController {
 
 		// POST /api/v1/menus/buy
 		@authorize.public()
-		// @ownerOrAdmin()
+		// @managerOrAdmin()
 		@route.post("buy")
 		async buyMany(list: [{item_code: null, quantity: number}]) {
 			const result = await asyncForEach(list, async (element: {item_code: null, quantity: number}, index: number) => {

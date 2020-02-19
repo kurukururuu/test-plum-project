@@ -5,12 +5,14 @@ import { Todo } from "../../../model/domain"
 import { bind } from "plumier"
 import { LoginUser } from "../../../model/domain"
 
-function ownerOrAdmin() {
-	return authorize.custom(async ({role, ctx, user}) => {
-			const todo: Todo = await db("Todo").where({ id: ctx.parameters[0] }).first()
-			return role.some(x => x === "Admin") || todo && todo.userId === user.userId
-	}, "Admin|Owner")
-}
+import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
+
+// function ownerOrAdmin() {
+// 	return authorize.custom(async ({role, ctx, user}) => {
+// 			const todo: Todo = await db("Todo").where({ id: ctx.parameters[0] }).first()
+// 			return role.some(x => x === "Admin") || todo && todo.userId === user.userId
+// 	}, "Admin|Owner")
+// }
 
 export class TodosController {
     
@@ -35,14 +37,14 @@ export class TodosController {
 		}
 		
 		// PUT /api/v1/todos/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.put(":id")
     modify(id: number, data: Todo) {
         return db("Todo").update(data).where({ id })
 		}
 		
     // DELETE /api/v1/todos/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.delete(":id")
     delete(id: number) {
         return db("Todo").update({ deleted: true }).where({ id })

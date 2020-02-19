@@ -6,11 +6,13 @@ import { Song } from "../../../model/domain"
 import { bind } from "plumier"
 import { LoginUser } from "../../../model/domain"
 
-function ownerOrAdmin() {
-	return authorize.custom(async ({role, ctx, user}) => {
-			return role.some(x => x === "Admin") || user && user.userId === user.userId
-	}, "Admin|Owner")
-}
+import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
+
+// function ownerOrAdmin() {
+// 	return authorize.custom(async ({role, ctx, user}) => {
+// 			return role.some(x => x === "Admin") || user && user.userId === user.userId
+// 	}, "Admin|Owner")
+// }
 
 export class SongsController {
     
@@ -40,14 +42,14 @@ export class SongsController {
     }
 
 		// PUT /api/v1/songs/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.put(":id")
     modify(id: number, data: Song) {
         return db("Song").update(data).where({ id })
 		}
 
 		// DELETE /api/v1/songs/:id
-		@ownerOrAdmin()
+		@managerOrAdmin()
     @route.delete(":id")
     delete(id: number) {
         return db("Song").update({ deleted: 1 }).where({ id })
