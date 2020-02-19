@@ -26,7 +26,7 @@ export class FilesController {
 		const files = await parser.save()
 		// files store information about uploaded files (single file or multiple files)
 		return {
-			fileUrl: process.env.HOST_URL + response.file(files[0].fileName).body
+			fileUrl: process.env.HOST + response.file(files[0].fileName).body
 		}
 	}
 }
