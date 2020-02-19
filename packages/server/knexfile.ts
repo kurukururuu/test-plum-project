@@ -11,11 +11,11 @@ export const configuration: Config = {
 		},
 		useNullAsDefault: true,
     migrations: {
-        tableName: '_knex_migrations',
-        directory: "./db/migrations"
+			tableName: '_knex_migrations',
+			directory: "./db/migrations"
     },
     seeds: {
-        directory: "./db/seeds"
+			directory: "./db/seeds"
     }
 }
 export const development: Config = { ...configuration }

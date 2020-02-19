@@ -61,7 +61,11 @@ export class Menu extends Domain {
 		@val.required()
 		@uniqueItemCode()
 		public item_code:string,
-		public completed: boolean = false,
+		public category:string = 'food',
+		public menu_description: string,
+		public menu_picture: string,
+		public status:string = 'active',
+		public completed:boolean = false,
 	) { super() }
 }
 
