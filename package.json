@@ -29,7 +29,9 @@
     "test:ui": "yarn workspace @project/ui test:unit",
     "start": "yarn workspace @project/server start"
   },
-  "dependencies": {},
+  "dependencies": {
+    "plumier": "^1.0.0-rc.1"
+  },
   "workspaces": {
     "packages": [
       "packages/*"
