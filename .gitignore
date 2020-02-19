@@ -8,6 +8,6 @@ build
 !jest.config.debug.js
 .DS_Store
 packages/server/dev.sqlite3.db
-packages/server/upload/*
+packages/server/upload/
 packages-lock.json
 yarn.lock
