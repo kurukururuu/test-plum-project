@@ -13,7 +13,6 @@ export class FilesController {
 	async upload(@bind.file() parser: FileParser) {
 	// async upload(files:any) {
 		const files = await parser.save()
-		console.log(files)
 		//files store information about uploaded files (single file or multiple files)
 		return {
 			fileUrl: response.file(join(__dirname, `./uploads/${files[0].fileName}`)).body
