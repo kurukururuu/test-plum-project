@@ -16,7 +16,7 @@ import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
 
 export class FilesController {
     
-	// POST /api/v1/files
+	// POST /api/v1/menus
 	@authorize.public()
 	// @authorize.role("Admin")
 	// @managerOrAdmin()
@@ -25,8 +25,9 @@ export class FilesController {
 	// console.log(process.env.HOST)
 		const files = await parser.save()
 		// files store information about uploaded files (single file or multiple files)
-		return {
-			fileUrl: process.env.HOST_URL + response.file(files[0].fileName).body
+		return 
+                        
+			fileUrl: process.env.HOST + response.file(files[0].fileName).body
 		}
 	}
 }
