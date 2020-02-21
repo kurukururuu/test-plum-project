@@ -2,8 +2,12 @@ import { val } from "plumier"
 import { db } from "../model/db";
 
 export function uniqueItemCode() {
-		return val.custom(async x => {
-				const user = await db("Menu").where({ item_code: x }).first()
-        return user ? "item code already used" : undefined 
-		})
+	return val.custom(async (x, info) => {
+		const menu = await db("Menu").where({ item_code: x }).first()
+		if (info.ctx.request.method === 'PUT') {
+			return undefined
+		} else {
+			return menu ? "item code already used" : undefined
+		}
+	})
 }

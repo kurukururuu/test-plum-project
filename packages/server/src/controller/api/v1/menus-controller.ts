@@ -89,7 +89,8 @@ export class MenusController {
 		// PUT /api/v1/menus/:id
 		@managerOrAdmin()
     @route.put(":id")
-    async modify(id: number, data: Menu) {
+    async modify(id: number, data: Menu, @bind.request() req:object) {
+			console.log(req)
 			await db("Menu").update(data).where({ id })
 			const menu = db("Menu").where({ id }).first()
 			return menu
