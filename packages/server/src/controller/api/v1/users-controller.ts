@@ -12,7 +12,7 @@ import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
 // 	}, "Admin|Owner")
 // }
 
-function returnedUser(data: { password: null }) {
+export function returnedUser(data: { password: null }) {
 	const obj = data
 	delete obj.password
 	return obj

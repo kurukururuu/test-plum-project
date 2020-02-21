@@ -2,7 +2,11 @@ import { HttpStatusError, route, val, authorize } from "plumier"
 
 import { db } from "../../../model/db"
 import { bind } from "plumier"
-import { LoginUser, Menu } from "../../../model/domain"
+import { LoginUser, Menu, Relations } from "../../../model/domain"
+
+import { returnedUser } from "./users-controller"
+
+import { fetchRelations } from "../../../model/relations"
 
 import { managerOrAdmin } from '../../../validator/manager-or-admin-validator'
 
@@ -20,7 +24,7 @@ export class MenusController {
     @route.post("")
 		async save(data: Menu, @bind.user() user: LoginUser) {
 			const id = await db("Menu").insert(<Menu>{ ...data, user_id: user.userId })
-			const menu = await db("Menu").where({ id }).first()
+			const menu = await db("Menu").where({ id:id[0] }).first()
 			return menu
     }
 
@@ -28,18 +32,58 @@ export class MenusController {
 		@authorize.public()
 		// @authorize.role("Admin")
     @route.get("")
-    list(offset: number=0, limit: number=50) {
-			return db("Menu").where({deleted: 0})
+    async list(offset: number=0, limit: number=50, @bind.query() model:Relations) {
+			let relationArray = new Array
+			let menus = await db("Menu").where({deleted: 0})
 			.offset(offset).limit(limit)
 			.orderBy("createdAt", "desc")
+
+			if (model.relations) {
+				relationArray = model.relations.split(',')
+				for (const item of menus) {
+					const payload = <any>{}
+
+					relationArray.forEach(element => {
+						payload[`${element}_id`] = item[`${element}_id`]
+					})
+					const resultRelation = await fetchRelations(relationArray, payload)
+					for (const relation of resultRelation) {
+						for (const rel in relation) {
+							if (relation[rel].value) {
+								item[`${rel}`] = relation[rel].value
+							}
+						}
+					}
+				}
+			}
+			
+			return menus
     }
 
 		// GET /api/v1/menus/:id
 		@authorize.public()
 		// @authorize.role("Admin")
     @route.get(":id")
-    get(id: number) {
-			return db("Menu").where({ id }).first()
+    async get(id: number, @bind.query() model:Relations) {
+			let relationArray = new Array
+			let menu = await db("Menu").where({ id }).first()
+
+			if (model.relations) {
+				relationArray = model.relations.split(',')
+				const payload = <any>{}
+
+				relationArray.forEach(element => {
+					payload[`${element}_id`] = menu[`${element}_id`]
+				})
+
+				const result = await fetchRelations(relationArray, payload)
+				result.forEach(element => {
+					for (const item in element) {
+						menu[`${item}`] = element[item].value
+					}
+				})
+			}
+			return menu
     }
 
 		// PUT /api/v1/menus/:id
@@ -79,8 +123,11 @@ export class MenusController {
 		@authorize.public()
 		// @managerOrAdmin()
 		@route.post("buy")
-		async buyMany(list: [{item_code: null, quantity: number}]) {
-			const result = await asyncForEach(list, async (element: {item_code: null, quantity: number}, index: number) => {
+		async buyMany(list: [{item_code: null, quantity: number}], @bind.user() user: LoginUser) {
+			let detail_transaction = new Array
+			let totalPrice = 0
+
+			const result = await asyncForEachMenu(list, async (element: {item_code: null, quantity: number, user: null}, index: number) => {
 				const item = {
 					item_code: element.item_code,
 					status: {}
@@ -96,6 +143,7 @@ export class MenusController {
 						updatedItem = await db("Menu").where({item_code: currentItem.item_code}).first()
 						item.status = {
 							message: 'Success',
+							quantity: element.quantity,
 							data: updatedItem
 						}
 					} else {
@@ -114,11 +162,25 @@ export class MenusController {
 				return item
 			})
 
+			result.forEach(element => {
+				if (element.status.message === 'Success') {
+					const obj = {
+						item: <Menu>{ ...element.status.data },
+						quantity: element.status.quantity
+					}
+					detail_transaction.push(obj)
+
+					totalPrice += (obj.quantity * Number(obj.item.price))
+				}
+			})
+			const userData = await db("User").where({ id:user.userId }).first()
+			await db("History").insert({totalPrice, detail_transaction: JSON.stringify(detail_transaction), user: JSON.stringify(returnedUser(userData)) })
+
 			return result
 		}
 }
 
-async function asyncForEach(array: [{item_code: null, quantity: number}], callback: Function) {
+async function asyncForEachMenu(array: [{item_code: null, quantity: number}], callback: Function) {
 	let arr = new Array
 	for (let index = 0; index < array.length; index++) {
 		const result = await callback(array[index], index, array);

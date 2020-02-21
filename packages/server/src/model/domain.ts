@@ -74,6 +74,22 @@ export class Menu extends Domain {
 export class LoginUser {
 	constructor(
 		public userId:number,
-		public role: UserRole
+		public role:UserRole
 	){}
+}
+
+@domain()
+export class Relations {
+	constructor(
+		public relations:string
+	){}
+}
+
+@domain()
+export class History extends Domain {
+	constructor(
+		public totalPrice:string,
+		public user:User,
+		public detail_transaction: any
+	) { super() }
 }
