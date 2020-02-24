@@ -12,8 +12,8 @@ export class HistoryController {
 	// @authorize.role("Admin")
 	@route.get("")
 
-	async list(offset: number=0, limit: number=50, page:number=1) {
-		const data = await db("History").where({deleted: 0})
+	async list(status: string, offset: number=0, limit: number=50, page:number=1) {
+		const data = await db("History").where({deleted: 0, status: status})
 		.offset(offset).limit(limit)
 		.orderBy("createdAt", "desc")
 		.paginate({ perPage: limit, currentPage: page })
