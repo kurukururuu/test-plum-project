@@ -22,25 +22,26 @@ export class MenusController {
 		@managerOrAdmin()
 		// @authorize.role("Admin")
     @route.post("")
-		async save(data: Menu, @bind.user() user: LoginUser) {
+		async save(@val.required() data: Menu, @bind.user() user: LoginUser) {
 			const id = await db("Menu").insert(<Menu>{ ...data, user_id: user.userId })
 			const menu = await db("Menu").where({ id:id[0] }).first()
 			return menu
     }
 
-		// GET /api/v1/menus?offset=<number>&limit=<number>
+		// GET /api/v1/menus?offset=<number>&limit=<number>&page=<number>
 		@authorize.public()
 		// @authorize.role("Admin")
     @route.get("")
-    async list(offset: number=0, limit: number=50, @bind.query() model:Relations) {
+    async list(offset: number=0, limit: number=50, page:number=1, @bind.query() model:Relations) {
 			let relationArray = new Array
 			let menus = await db("Menu").where({deleted: 0})
 			.offset(offset).limit(limit)
 			.orderBy("createdAt", "desc")
+			.paginate({ perPage: limit, currentPage: page })
 
 			if (model.relations) {
 				relationArray = model.relations.split(',')
-				for (const item of menus) {
+				for (const item of menus.data) {
 					const payload = <any>{}
 
 					relationArray.forEach(element => {
@@ -54,6 +55,7 @@ export class MenusController {
 							}
 						}
 					}
+
 				}
 			}
 			
@@ -64,20 +66,18 @@ export class MenusController {
 		@authorize.public()
 		// @authorize.role("Admin")
     @route.get(":id")
-    async get(id: number, @bind.query() model:Relations) {
+    async get(@val.required() id: number, @bind.query() model:Relations) {
 			let relationArray = new Array
 			let menu = await db("Menu").where({ id }).first()
 
 			if (model.relations) {
 				relationArray = model.relations.split(',')
 				const payload = <any>{}
-
 				relationArray.forEach(element => {
 					payload[`${element}_id`] = menu[`${element}_id`]
 				})
-
-				const result = await fetchRelations(relationArray, payload)
-				result.forEach(element => {
+				const resultRelation = await fetchRelations(relationArray, payload)
+				resultRelation.forEach(element => {
 					for (const item in element) {
 						menu[`${item}`] = element[item].value
 					}
@@ -89,8 +89,7 @@ export class MenusController {
 		// PUT /api/v1/menus/:id
 		@managerOrAdmin()
     @route.put(":id")
-    async modify(id: number, data: Menu, @bind.request() req:object) {
-			console.log(req)
+    async modify(@val.required() id: number, data: Menu, @bind.request() req:object) {
 			await db("Menu").update(data).where({ id })
 			const menu = db("Menu").where({ id }).first()
 			return menu
@@ -108,7 +107,7 @@ export class MenusController {
 		@authorize.public()
 		// @managerOrAdmin()
 		@route.post(":code/buy")
-		async buy(code: string, quantity: number) {
+		async buy(@val.required() code: string, @val.required() quantity: number) {
 				const currentItem = await db("Menu").where({ item_code:code }).first()
 				if (currentItem) {
 					if (currentItem.stock > quantity) {
@@ -124,7 +123,7 @@ export class MenusController {
 		@authorize.public()
 		// @managerOrAdmin()
 		@route.post("buy")
-		async buyMany(list: [{item_code: null, quantity: number}], @bind.user() user: LoginUser) {
+		async buyMany(@val.required() list: [{item_code: null, quantity: number}], @bind.user() user: LoginUser) {
 			let detail_transaction = new Array
 			let totalPrice = 0
 

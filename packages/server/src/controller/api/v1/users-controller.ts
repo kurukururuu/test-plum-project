@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt"
-import { route, val, authorize } from "plumier"
+import { route, val, authorize, HttpStatusError } from "plumier"
 
 import { db } from "../../../model/db"
 import { User } from "../../../model/domain"
@@ -24,24 +24,27 @@ export class UsersController {
 		// @authorize.public()
 		@managerOrAdmin()
     @route.post("")
-    async save(data: User) {
-			const password = await bcrypt.hash(data.password, 10)
-			const id = await db("User").insert({ ...data, password, role: "Waiter" })
-			const user = await db("User").where({ id:id[0] }).first()
-			return returnedUser(user)
+    async save(@val.required() email:any, @val.required() password:any, data: User) {
+			if (data.email && data.password) {
+				const password = await bcrypt.hash(data.password, 10)
+				const id = await db("User").insert({ ...data, password, role: "Waiter" })
+				const user = await db("User").where({ id:id[0] }).first()
+				return returnedUser(user)
+			}
     }
 
-		// GET /api/v1/users?offset=<number>&limit=<number>
+		// GET /api/v1/users?offset=<number>&limit=<number>&page=<number>
 		// @authorize.role("Admin")
 		@managerOrAdmin()
     @route.get("")
-    async list(offset: number=0, limit: number=50) {
+    async list(offset: number=0, limit: number=50, page:number=1) {
 			let users = await db("User").where({deleted: 0})
 			.offset(offset).limit(limit)
 			.orderBy("createdAt", "desc")
+			.paginate({ perPage: limit, currentPage: page })
 
 			let arr = new Array
-			users.forEach((element:any) => {
+			users.data.forEach((element:any) => {
 				arr.push(returnedUser(element))
 			})
 			return arr
@@ -51,7 +54,7 @@ export class UsersController {
 		// @authorize.role("Admin")
 		@managerOrAdmin()
     @route.get(":id")
-    async get(id: number) {
+    async get(@val.required() id: number) {
 			const user = await db("User").where({ id }).first()
 			return returnedUser(user)
     }
@@ -59,7 +62,7 @@ export class UsersController {
 		// PUT /api/v1/users/:id
 		@managerOrAdmin()
     @route.put(":id")
-    async modify(id: number, data: User) {
+    async modify(@val.required() id: number, data: User) {
 			if (data.password) {
 				const password = await bcrypt.hash(data.password, 10)
 				await db("User").update({...data, password}).where({ id })
@@ -74,7 +77,7 @@ export class UsersController {
 		// DELETE /api/v1/users/:id
 		@managerOrAdmin()
     @route.delete(":id")
-    async delete(id: number) {
+    async delete(@val.required() id: number) {
 			await db("User").update({ deleted: 1 }).where({ id })
 			return `success delete user`
     }
