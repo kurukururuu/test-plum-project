@@ -13,10 +13,18 @@ export class HistoryController {
 	@route.get("")
 
 	async list(status: string, offset: number=0, limit: number=50, page:number=1) {
-		const data = await db("History").where({deleted: 0, status: status})
-		.offset(offset).limit(limit)
-		.orderBy("createdAt", "desc")
-		.paginate({ perPage: limit, currentPage: page })
+		let data = {data:[]}
+		if (status) {
+			data = await db("History").where({deleted: 0, status})
+			.offset(offset).limit(limit)
+			.orderBy("createdAt", "desc")
+			.paginate({ perPage: limit, currentPage: page })
+		} else {
+			data = await db("History").where({deleted: 0})
+			.offset(offset).limit(limit)
+			.orderBy("createdAt", "desc")
+			.paginate({ perPage: limit, currentPage: page })
+		}
 
 		let arr = new Array
 		data.data.forEach(element => {
