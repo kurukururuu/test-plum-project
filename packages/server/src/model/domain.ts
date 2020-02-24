@@ -90,6 +90,7 @@ export class History extends Domain {
 	constructor(
 		public totalPrice:string,
 		public user:User,
+		public status:string = 'in process',
 		public detail_transaction: any
 	) { super() }
 }

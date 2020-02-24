@@ -174,7 +174,7 @@ export class MenusController {
 				}
 			})
 			const userData = await db("User").where({ id:user.userId }).first()
-			await db("History").insert({totalPrice, detail_transaction: JSON.stringify(detail_transaction), user: JSON.stringify(returnedUser(userData)) })
+			await db("History").insert({totalPrice, status: 'in process', detail_transaction: JSON.stringify(detail_transaction), user: JSON.stringify(returnedUser(userData)) })
 
 			return result
 		}
