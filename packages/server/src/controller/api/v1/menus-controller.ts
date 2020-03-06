@@ -108,7 +108,7 @@ export class MenusController {
 		// @managerOrAdmin()
 		@route.post(":code/buy")
 		async buy(@val.required() code: string, @val.required() quantity: number) {
-				const currentItem = await db("Menu").where({ item_code:code }).first()
+				const currentItem = await db("Menu").where({ item_code:code, deleted:0 }).first()
 				if (currentItem) {
 					if (currentItem.stock > quantity) {
 						await db("Menu").where({item_code: code}).first().update({stock:currentItem.stock-quantity})
@@ -133,7 +133,7 @@ export class MenusController {
 					status: {}
 				}
 				
-				const currentItem = await db("Menu").where({ item_code:element.item_code }).first()
+				const currentItem = await db("Menu").where({ item_code:element.item_code, deleted:0 }).first()
 
 				if (currentItem) {
 					let updatedItem = {}
